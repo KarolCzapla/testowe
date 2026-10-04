@@ -1,9 +1,8 @@
-export function matchesMovie(haystack, query) {
-  return haystack.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
-}
-
-export function nextWatchlist(current, id) {
-  const values = new Set(current);
-  values.has(id) ? values.delete(id) : values.add(id);
-  return [...values].sort();
+// Keep search fields separate: text spanning two fields is not a match.
+export function matchesRecipe(recipe, query) {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  return [recipe.title, recipe.description, recipe.category,
+    ...recipe.dietary_tags, ...recipe.ingredients]
+    .some(value => value.toLowerCase().includes(needle));
 }

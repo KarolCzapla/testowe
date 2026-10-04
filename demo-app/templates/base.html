@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="TableStory recipes for everyday cooking. Find a dish and follow its clearly told method.">
+  <title>{% block title %}Everyday recipes · TableStory{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="{{ mode }} {% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to recipe content</a>
+  <header class="topbar">
+    <a class="brand" href="{{ browse_url }}" aria-label="TableStory — browse recipes"><span aria-hidden="true">TS</span>TableStory</a>
+    <span class="brand-note">Everyday cooking</span>
+  </header>
+  <main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
+  <footer>TableStory · Good food, clearly told.</footer>
+  {% if bootstrap.page != 'missing' %}
+  <script id="page-bootstrap" type="application/json">{{ bootstrap|tojson }}</script>
+  <script type="module" src="{{ url_for('static', filename='app.js') }}"></script>
+  {% endif %}
+</body>
+</html>

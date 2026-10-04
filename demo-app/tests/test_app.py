@@ -1,7 +1,4 @@
-"""Application smoke checks for the recipe read slice.
-
-Page composition is delivered by later tickets.
-"""
+"""Application smoke checks for recipe reads and the supported route surface."""
 
 
 def test_collection_and_single_recipe_reads(client):
@@ -41,4 +38,5 @@ def test_application_instances_own_immutable_recipe_state(client):
     assert {rule.rule for rule in client.application.url_map.iter_rules()} == {
         "/static/<path:filename>", "/api/recipes", "/api/recipes/<recipe_id>",
         "/api/cookbook", "/api/cookbook/<recipe_id>",
+        "/", "/recipe/<recipe_id>",
     }
