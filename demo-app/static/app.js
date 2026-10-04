@@ -1,4 +1,5 @@
 import {matchesRecipe} from './app-logic.js';
+import {createCookbookController} from './cookbook.js';
 
 const EMPTY_MESSAGE = 'No recipes found. Try another ingredient or dish.';
 
@@ -12,23 +13,48 @@ export function updateBrowseResults({recipes, cards, query, countElement, emptyE
   emptyElement.hidden = count !== 0;
 }
 
-// This initializer is the integration seam for cookbook and TV controllers.
-export function initializePage(document) {
+// Both page types share authoritative membership and accessible announcements.
+export function initializePage(document, {transport} = {}) {
   const bootstrapElement = document.querySelector('#page-bootstrap');
   if (!bootstrapElement) return () => {};
   const countElement = document.querySelector('#count');
+  let statusElement = document.querySelector('#cookbook-status');
+  if (!statusElement) {
+    statusElement = document.createElement('p');
+    statusElement.setAttribute('id', 'cookbook-status');
+    (document.querySelector('#main') || document.body).appendChild(statusElement);
+  }
+  statusElement.setAttribute('role', 'status');
+  statusElement.setAttribute('aria-live', 'polite');
+  statusElement.setAttribute('aria-atomic', 'true');
+  const announce = message => { statusElement.textContent = message; };
+  const cleanups = [];
+  const cleanup = () => cleanups.splice(0).forEach(dispose => dispose());
   let bootstrap;
   try {
     bootstrap = JSON.parse(bootstrapElement.textContent);
-    if (!Array.isArray(bootstrap.recipes) || !Array.isArray(bootstrap.saved_recipe_ids)) {
+    if (!bootstrap || !Array.isArray(bootstrap.recipes) ||
+        !['browse', 'detail'].includes(bootstrap.page) ||
+        !['mobile', 'tv'].includes(bootstrap.mode)) {
       throw new Error('Invalid recipe bootstrap');
     }
+    const knownIds = new Set(bootstrap.recipes.map(recipe => recipe.id));
+    const controls = [...document.querySelectorAll('.cookbook')];
+    if (controls.some(button => !knownIds.has(button.dataset.recipeId))) {
+      throw new Error('Unknown recipe cookbook control');
+    }
+    const cookbook = createCookbookController({
+      initialIds: bootstrap.saved_recipe_ids, controls, transport, announce,
+    });
+    cleanups.push(() => cookbook.dispose());
   } catch {
+    announce('Could not start My Cookbook for these recipes. Please reload.');
     if (countElement) countElement.textContent = 'Could not start recipe search. Please reload.';
-    return () => {};
+    cleanup();
+    return cleanup;
   }
   const search = document.querySelector('#search');
-  if (bootstrap.page !== 'browse' || bootstrap.mode !== 'mobile' || !search) return () => {};
+  if (bootstrap.page !== 'browse' || bootstrap.mode !== 'mobile' || !search) return cleanup;
   const cards = [...document.querySelectorAll('.recipe-card')];
   const emptyElement = document.querySelector('#empty');
   const update = () => updateBrowseResults({
@@ -36,7 +62,8 @@ export function initializePage(document) {
   });
   search.addEventListener('input', update);
   update();
-  return () => search.removeEventListener('input', update);
+  cleanups.push(() => search.removeEventListener('input', update));
+  return cleanup;
 }
 
 if (typeof document !== 'undefined') initializePage(document);
