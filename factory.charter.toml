@@ -1,8 +1,8 @@
 # Human-owned policy for the Software (re)-Factory.
 # Agents may read this file but must never modify it.
 schema_version = 1
-approved = false
-approved_policy_sha256 = ""
+approved = true
+approved_policy_sha256 = "3f34af09486bace0432162d7580d07c133bb9febc6bdaf661403e32d2639c5fe"
 
 [policy]
 consequence_tier = "shared"
