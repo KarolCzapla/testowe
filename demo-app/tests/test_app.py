@@ -37,6 +37,6 @@ def test_application_instances_own_immutable_recipe_state(client):
     assert client.application.config["TESTING"] is True
     assert {rule.rule for rule in client.application.url_map.iter_rules()} == {
         "/static/<path:filename>", "/api/recipes", "/api/recipes/<recipe_id>",
-        "/api/cookbook", "/api/cookbook/<recipe_id>",
+        "/api/cookbook", "/api/cookbook/<recipe_id>", "/api/rails",
         "/", "/recipe/<recipe_id>",
     }

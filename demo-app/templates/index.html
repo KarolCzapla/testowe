@@ -1,11 +1,41 @@
 {% extends 'base.html' %}
-{% from '_recipe_card.html' import recipe_card %}
+{% from '_recipe_card.html' import recipe_card, artwork, cookbook_button %}
 {% block content %}
 <section class="hero" aria-labelledby="welcome">
   <p class="eyebrow">A little inspiration for your table</p>
   <h1 id="welcome">Good food, clearly told.</h1>
   <p>Discover recipes for everyday cooking. Find a familiar ingredient, try a new dish, and follow each method with confidence.</p>
 </section>
+{% if mode == 'tv' %}
+<div class="discovery-rails" data-tv-browse>
+  {% for rail in rails %}
+  <section class="recipe-rail" id="{{ rail.id }}" data-rail-id="{{ rail.id }}" aria-labelledby="{{ rail.id }}-heading">
+    <h2 id="{{ rail.id }}-heading">{{ rail.name }}</h2>
+    {% if rail.recipe_ids %}
+    <div class="rail-cards">
+      {% for recipe_id in rail.recipe_ids %}
+      {% set recipe = recipes_by_id[recipe_id] %}
+      <article class="recipe-card" data-recipe-id="{{ recipe.id }}" id="{{ rail.id }}-{{ recipe.id }}">
+        <a class="recipe-link" href="{{ url_for('recipe_detail', recipe_id=recipe.id, mode='tv') }}" aria-label="Read {{ recipe.title }} recipe">
+          {{ artwork(recipe) }}
+          <div class="card-content">
+            <p class="eyebrow">{{ recipe.category }}</p>
+            <h3>{{ recipe.title }}</h3>
+            <p class="card-meta">{{ recipe.prep_minutes + recipe.cook_minutes }} minutes · {{ recipe.difficulty }}</p>
+            {% if recipe.dietary_tags %}<p class="dietary-tags">{{ recipe.dietary_tags|join(' · ') }}</p>{% endif %}
+          </div>
+        </a>
+        <div class="card-actions">{{ cookbook_button(recipe, recipe.id in saved_recipe_ids) }}</div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">Your cookbook is ready for inspiration. Add a recipe to My Cookbook to find it here.</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% else %}
 <section aria-labelledby="collection-heading">
   <label class="search-label" for="search">Search recipes by dish or ingredient</label>
   <input id="search" class="search" type="search" placeholder="Try chickpeas, lemon or breakfast" autocomplete="off" aria-controls="recipe-grid">
@@ -20,4 +50,5 @@
   </div>
   <p class="empty" id="empty" hidden>No recipes found. Try another ingredient or dish.</p>
 </section>
+{% endif %}
 {% endblock %}
