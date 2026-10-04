@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pocket Cinema</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Pocket Cinema home"><span>PC</span>Pocket Cinema</a>
+    <button class="avatar" aria-label="Open profile">GA</button>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Tonight's collection</p>
+      <h1>Small screen.<br>Big stories.</h1>
+      <p>Twenty-four films from places that almost exist.</p>
+    </section>
+    <label class="search">
+      <span aria-hidden="true">⌕</span>
+      <input id="search" type="search" placeholder="Search films or genres" autocomplete="off">
+    </label>
+    <div class="section-heading"><h2>All films</h2><span id="count">{{ movies|length }} titles</span></div>
+    <section class="movie-grid" id="movie-grid" aria-live="polite">
+      {% for movie in movies %}
+      <article class="movie-card" data-title="{{ (movie.title ~ ' ' ~ movie.genres|join(' '))|lower }}">
+        <a href="{{ url_for('detail', movie_id=movie.id) }}" aria-label="View {{ movie.title }}">
+          <div class="poster" style="--poster-a:{{ movie.colors[0] }};--poster-b:{{ movie.colors[1] }}">
+            <span class="poster-mark">{{ movie.title[0] }}</span>
+            <span class="poster-title">{{ movie.title }}</span>
+          </div>
+          <h3>{{ movie.title }}</h3>
+          <p>{{ movie.year }} · {{ movie.runtime }}m</p>
+        </a>
+        <button class="watchlist" data-movie-id="{{ movie.id }}" aria-label="Add {{ movie.title }} to watchlist">+</button>
+      </article>
+      {% endfor %}
+    </section>
+    <p class="empty" id="empty" hidden>No films found. Try another search.</p>
+  </main>
+  <nav class="tabbar" aria-label="Primary"><a class="active" href="/">Browse</a><a href="#watchlist">Watchlist</a><a href="#profile">Profile</a></nav>
+  <script type="module" src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

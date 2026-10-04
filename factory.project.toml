@@ -1,0 +1,41 @@
+# Repository-specific configuration for the Software (re)-Factory.
+schema_version = 1
+
+[project]
+name = "Pocket Cinema"
+default_branch = "main"
+source_roots = ["demo-app"]
+protected_paths = [".github/workflows"]
+
+[environment]
+required_tools = ["git", "python3", "node"]
+setup = ["{python} -m pip install -r demo-app/requirements.txt"]
+ports = [5000]
+
+[qa]
+test_roots = ["demo-app/tests", "demo-app/static/tests"]
+test_file_patterns = ["test_ticket_{ticket}*.py", "ticket-{ticket}*.test.js", "ticket-{ticket}*.test.ts", "ticket-{ticket}*.test.tsx", "ticket_{ticket}_test.go", "ticket_{ticket}_test.rs", "Ticket{ticket}*Test.java"]
+
+[[gate]]
+name = "api-tests"
+cmd = "{python} -m pytest -q demo-app/tests"
+required = true
+level = "full"
+
+[[gate]]
+name = "ui-logic-tests"
+cmd = "node --test demo-app/static/tests/*.test.js"
+required = true
+level = "full"
+
+[[gate]]
+name = "python-compile"
+cmd = "{python} -m compileall -q demo-app"
+required = false
+level = "fast"
+
+[[gate]]
+name = "repository-integrity"
+cmd = "git diff --check"
+required = true
+level = "deep"

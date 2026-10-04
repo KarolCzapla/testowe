@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ movie.title }} · Pocket Cinema</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="detail-page">
+  <main class="detail-shell">
+    <a class="back" href="/">← Browse</a>
+    <div class="detail-poster poster" style="--poster-a:{{ movie.colors[0] }};--poster-b:{{ movie.colors[1] }}">
+      <span class="poster-mark">{{ movie.title[0] }}</span>
+      <span class="poster-title">{{ movie.title }}</span>
+    </div>
+    <p class="eyebrow">{{ movie.genres|join(' · ') }}</p>
+    <h1>{{ movie.title }}</h1>
+    <p class="meta">{{ movie.year }} · {{ movie.runtime }} minutes · {{ movie.rating }}</p>
+    <p class="synopsis">{{ movie.synopsis }}</p>
+    <button class="primary watchlist" data-movie-id="{{ movie.id }}">+ Add to watchlist</button>
+  </main>
+  <script type="module" src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
