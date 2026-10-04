@@ -1,4 +1,4 @@
-"""TableStory's mobile recipe pages and local recipe/My Cookbook APIs."""
+"""TableStory's mode-aware recipe pages and local discovery/My Cookbook APIs."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from pathlib import Path
 from flask import Flask, jsonify, render_template, request, url_for
 
 from cookbook import CookbookState, cookbook_snapshot, remove_recipe, save_recipe, saved_recipes
+from discovery import build_rails, resolve_view_mode
 from recipes import find_recipe, load_recipes, recipe_to_json, search_recipes
 
 ROOT = Path(__file__).parent
@@ -22,12 +23,13 @@ def create_app(testing: bool = False, *, recipe_path: Path | None = None) -> Fla
 
     def page_context(page, recipes):
         saved_ids = cookbook_snapshot(cookbook)
-        browse_url = url_for("index")
+        view_mode = resolve_view_mode(request.args.get("mode"), request.headers.get("User-Agent", ""))
+        browse_url = url_for("index", mode="tv") if view_mode.mode == "tv" else url_for("index")
         return {
-            "mode": "mobile", "browse_url": browse_url,
+            "view_mode": view_mode, "mode": view_mode.mode, "browse_url": browse_url,
             "saved_recipe_ids": saved_ids,
             "bootstrap": {
-                "page": page, "mode": "mobile", "browse_url": browse_url,
+                "page": page, "mode": view_mode.mode, "browse_url": browse_url,
                 "recipes": [recipe_to_json(recipe) for recipe in recipes],
                 "saved_recipe_ids": sorted(saved_ids),
             },
@@ -35,9 +37,11 @@ def create_app(testing: bool = False, *, recipe_path: Path | None = None) -> Fla
 
     @app.get("/")
     def index():
+        context = page_context("browse", collection.recipes)
         return render_template(
             "index.html", recipes=collection.recipes,
-            **page_context("browse", collection.recipes),
+            rails=build_rails(collection, context["saved_recipe_ids"]),
+            recipes_by_id=collection.by_id, **context,
         )
 
     @app.get("/recipe/<recipe_id>")
@@ -69,6 +73,11 @@ def create_app(testing: bool = False, *, recipe_path: Path | None = None) -> Fla
         return jsonify([
             recipe_to_json(recipe) for recipe in saved_recipes(collection, cookbook)
         ])
+
+    @app.get("/api/rails")
+    def rails_api():
+        rails = build_rails(collection, cookbook_snapshot(cookbook))
+        return jsonify([rail.to_json() for rail in rails])
 
     @app.post("/api/cookbook")
     def add_to_cookbook():

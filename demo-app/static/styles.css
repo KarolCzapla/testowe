@@ -186,3 +186,76 @@ footer { padding: 24px 20px; border-top: 1px solid var(--herb); text-align: cent
 @media (max-width: 420px) { .brand-note { display: none; } }
 @media (min-width: 600px) { .recipe-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 960px) { .recipe-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* TV rails scroll inside the page, with room for the full focus outline. */
+.tv { font-size: 28px; }
+.tv main { max-width: 1800px; padding: 0 48px 64px; }
+.tv .topbar { padding: 24px 60px; }
+.tv .brand { font-size: 36px; gap: 16px; }
+.tv .brand span { width: 60px; height: 60px; font-size: 26px; }
+.tv .brand-note, .tv footer { font-size: 24px; }
+.tv .hero { max-width: 1150px; padding: 32px 0; }
+.tv h1 { font-size: 56px; }
+.tv h2 { font-size: 36px; }
+.tv h3 { font-size: 30px; }
+.tv .hero > p:last-child, .tv .description { font-size: 28px; }
+.tv .eyebrow, .tv .dietary-tags, .tv dt { font-size: 24px; }
+.tv .recipe-rail { min-width: 0; margin-bottom: 40px; }
+.tv .rail-cards {
+  display: flex;
+  gap: 28px;
+  overflow-x: auto;
+  padding: 16px 12px 24px;
+  scroll-padding-inline: 12px;
+  scrollbar-color: var(--herb) var(--cream);
+}
+.tv .rail-cards .recipe-card { flex: 0 0 400px; }
+.tv .recipe-artwork { min-height: 200px; }
+.tv .recipe-link, .tv .cookbook, .tv .back { scroll-margin: 16px; }
+.tv :focus-visible {
+  outline-width: 5px;
+  outline-offset: 5px;
+  box-shadow: 0 0 0 5px var(--cream);
+}
+.tv .cookbook { min-height: 64px; font-size: 26px; }
+.tv .detail-shell { max-width: 1500px; }
+.tv .detail-actions {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  padding: 16px 12px;
+  margin-bottom: 24px;
+  background: var(--cream);
+  border-bottom: 2px solid var(--herb);
+}
+.tv .detail-actions .cookbook { width: auto; max-width: 100%; }
+.tv .back { padding: 12px; margin: 0; }
+.tv .recipe-facts { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+.tv .instructions { max-width: 1200px; }
+.tv .instructions li { margin-bottom: 24px; }
+.tv .instructions ul, .tv .instructions ol { padding-left: 48px; }
+.tv.detail-page main { scroll-padding-top: 140px; }
+.tv .detail-shell > .recipe-artwork {
+  float: right;
+  width: 340px;
+  margin: 0 0 24px 40px;
+}
+.tv .recipe-facts { clear: both; }
+.tv .detail-shell .back, .tv .detail-shell > .cookbook { scroll-margin-top: 140px; }
+/* Explicit TV selection can still be opened on a narrow device. */
+@media (max-width: 900px) {
+  .tv { font-size: 20px; }
+  .tv main { padding-inline: 20px; }
+  .tv .topbar { padding: 20px; }
+  .tv h1 { font-size: 38px; }
+  .tv .hero > p:last-child, .tv .description { font-size: 22px; }
+  .tv .rail-cards .recipe-card { flex-basis: min(400px, 85vw); }
+  .tv .recipe-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tv .detail-shell > .recipe-artwork { float: none; width: 100%; margin: 0 0 24px; }
+  .tv .detail-actions { position: static; }
+}
