@@ -1,6 +1,6 @@
 """Application smoke checks for the recipe read slice.
 
-Page composition and cookbook operations are delivered by later tickets.
+Page composition is delivered by later tickets.
 """
 
 
@@ -40,4 +40,5 @@ def test_application_instances_own_immutable_recipe_state(client):
     assert client.application.config["TESTING"] is True
     assert {rule.rule for rule in client.application.url_map.iter_rules()} == {
         "/static/<path:filename>", "/api/recipes", "/api/recipes/<recipe_id>",
+        "/api/cookbook", "/api/cookbook/<recipe_id>",
     }
