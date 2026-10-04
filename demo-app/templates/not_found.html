@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Recipe not found · TableStory{% endblock %}
+{% block content %}
+<section class="missing">
+  <p class="eyebrow">A fresh start</p>
+  <h1>Recipe not found</h1>
+  <p>We couldn't find that recipe. Discover another dish for your table.</p>
+  <a class="back" href="{{ browse_url }}">← Browse recipes</a>
+</section>
+{% endblock %}

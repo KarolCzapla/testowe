@@ -1,24 +1,30 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ movie.title }} · Pocket Cinema</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body class="detail-page">
-  <main class="detail-shell">
-    <a class="back" href="/">← Browse</a>
-    <div class="detail-poster poster" style="--poster-a:{{ movie.colors[0] }};--poster-b:{{ movie.colors[1] }}">
-      <span class="poster-mark">{{ movie.title[0] }}</span>
-      <span class="poster-title">{{ movie.title }}</span>
-    </div>
-    <p class="eyebrow">{{ movie.genres|join(' · ') }}</p>
-    <h1>{{ movie.title }}</h1>
-    <p class="meta">{{ movie.year }} · {{ movie.runtime }} minutes · {{ movie.rating }}</p>
-    <p class="synopsis">{{ movie.synopsis }}</p>
-    <button class="primary watchlist" data-movie-id="{{ movie.id }}">+ Add to watchlist</button>
-  </main>
-  <script type="module" src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
-</html>
+{% extends 'base.html' %}
+{% from '_recipe_card.html' import artwork, cookbook_button %}
+{% block title %}{{ recipe.title }} recipe · TableStory{% endblock %}
+{% block body_class %}detail-page{% endblock %}
+{% block content %}
+<article class="detail-shell">
+  <a class="back" href="{{ browse_url }}">← Browse recipes</a>
+  {{ artwork(recipe) }}
+  <p class="eyebrow">{{ recipe.category }}</p>
+  <h1>{{ recipe.title }}</h1>
+  <p class="description">{{ recipe.description }}</p>
+  {% if recipe.dietary_tags %}<p class="dietary-tags">Dietary tags: {{ recipe.dietary_tags|join(' · ') }}</p>{% endif %}
+  <dl class="recipe-facts">
+    <div><dt>Prep time</dt><dd>{{ recipe.prep_minutes }} minutes</dd></div>
+    <div><dt>Cook time</dt><dd>{{ recipe.cook_minutes }} minutes</dd></div>
+    <div><dt>Total time</dt><dd>{{ recipe.prep_minutes + recipe.cook_minutes }} minutes</dd></div>
+    <div><dt>Difficulty</dt><dd>{{ recipe.difficulty }}</dd></div>
+    <div><dt>Servings</dt><dd>{{ recipe.servings }}</dd></div>
+  </dl>
+  {{ cookbook_button(recipe, recipe.id in saved_recipe_ids) }}
+  <section class="instructions" aria-labelledby="ingredients-heading">
+    <h2 id="ingredients-heading">Ingredients</h2>
+    <ul>{% for ingredient in recipe.ingredients %}<li>{{ ingredient }}</li>{% endfor %}</ul>
+  </section>
+  <section class="instructions" aria-labelledby="method-heading">
+    <h2 id="method-heading">Method</h2>
+    <ol>{% for step in recipe.steps %}<li>{{ step }}</li>{% endfor %}</ol>
+  </section>
+</article>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% macro cookbook_button(recipe, saved) -%}
+<button type="button" class="cookbook{% if saved %} saved{% endif %}"
+        data-recipe-id="{{ recipe.id }}" data-recipe-title="{{ recipe.title }}"
+        aria-pressed="{{ 'true' if saved else 'false' }}"
+        aria-label="{{ 'Remove' if saved else 'Add' }} {{ recipe.title }} {{ 'from' if saved else 'to' }} My Cookbook">
+  <span aria-hidden="true">{{ '✓' if saved else '+' }}</span>
+  {{ 'Remove from' if saved else 'Add to' }} My Cookbook
+</button>
+{%- endmacro %}
+
+{% macro artwork(recipe) -%}
+<div class="recipe-artwork" aria-hidden="true" style="--art-a:{{ recipe.colors[0] }};--art-b:{{ recipe.colors[1] }}">
+  <span class="dish-initial">{{ recipe.title[0] }}</span>
+  <span class="artwork-caption">{{ recipe.title }}</span>
+</div>
+{%- endmacro %}
+
+{% macro recipe_card(recipe, saved, mode, occurrence_id) -%}
+<article class="recipe-card" data-recipe-id="{{ recipe.id }}" id="{{ occurrence_id }}">
+  <a class="recipe-link" href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" aria-label="Read {{ recipe.title }} recipe">
+    {{ artwork(recipe) }}
+    <div class="card-content">
+      <p class="eyebrow">{{ recipe.category }}</p>
+      <h3>{{ recipe.title }}</h3>
+      <p class="card-meta">{{ recipe.prep_minutes + recipe.cook_minutes }} minutes · {{ recipe.difficulty }}</p>
+      {% if recipe.dietary_tags %}<p class="dietary-tags">{{ recipe.dietary_tags|join(' · ') }}</p>{% endif %}
+    </div>
+  </a>
+  <div class="card-actions">{{ cookbook_button(recipe, saved) }}</div>
+</article>
+{%- endmacro %}

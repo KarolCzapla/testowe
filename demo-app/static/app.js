@@ -1,28 +1,42 @@
-import {matchesMovie} from './app-logic.js';
+import {matchesRecipe} from './app-logic.js';
 
-const search = document.querySelector('#search');
-const cards = [...document.querySelectorAll('.movie-card')];
+const EMPTY_MESSAGE = 'No recipes found. Try another ingredient or dish.';
 
-search?.addEventListener('input', () => {
-  let visible = 0;
-  for (const card of cards) {
-    const show = matchesMovie(card.dataset.title, search.value);
-    card.hidden = !show;
-    visible += Number(show);
-  }
-  document.querySelector('#count').textContent = `${visible} title${visible === 1 ? '' : 's'}`;
-  document.querySelector('#empty').hidden = visible !== 0;
-});
-
-for (const button of document.querySelectorAll('.watchlist')) {
-  button.addEventListener('click', async () => {
-    const saved = button.classList.toggle('saved');
-    button.textContent = saved ? '✓' : '+';
-    button.setAttribute('aria-label', `${saved ? 'Remove from' : 'Add to'} watchlist`);
-    await fetch(saved ? '/api/watchlist' : `/api/watchlist/${button.dataset.movieId}`, {
-      method: saved ? 'POST' : 'DELETE',
-      headers: {'Content-Type': 'application/json'},
-      body: saved ? JSON.stringify({id: button.dataset.movieId}) : undefined,
-    });
-  });
+export function updateBrowseResults({recipes, cards, query, countElement, emptyElement}) {
+  const matchingIds = new Set(recipes.filter(recipe => matchesRecipe(recipe, query))
+    .map(recipe => recipe.id));
+  for (const card of cards) card.hidden = !matchingIds.has(card.dataset.recipeId);
+  const count = matchingIds.size;
+  countElement.textContent = `${count} recipe${count === 1 ? '' : 's'}`;
+  emptyElement.textContent = EMPTY_MESSAGE;
+  emptyElement.hidden = count !== 0;
 }
+
+// This initializer is the integration seam for cookbook and TV controllers.
+export function initializePage(document) {
+  const bootstrapElement = document.querySelector('#page-bootstrap');
+  if (!bootstrapElement) return () => {};
+  const countElement = document.querySelector('#count');
+  let bootstrap;
+  try {
+    bootstrap = JSON.parse(bootstrapElement.textContent);
+    if (!Array.isArray(bootstrap.recipes) || !Array.isArray(bootstrap.saved_recipe_ids)) {
+      throw new Error('Invalid recipe bootstrap');
+    }
+  } catch {
+    if (countElement) countElement.textContent = 'Could not start recipe search. Please reload.';
+    return () => {};
+  }
+  const search = document.querySelector('#search');
+  if (bootstrap.page !== 'browse' || bootstrap.mode !== 'mobile' || !search) return () => {};
+  const cards = [...document.querySelectorAll('.recipe-card')];
+  const emptyElement = document.querySelector('#empty');
+  const update = () => updateBrowseResults({
+    recipes: bootstrap.recipes, cards, query: search.value, countElement, emptyElement,
+  });
+  search.addEventListener('input', update);
+  update();
+  return () => search.removeEventListener('input', update);
+}
+
+if (typeof document !== 'undefined') initializePage(document);
