@@ -1,22 +1,43 @@
-def test_home_and_detail_render(client):
-    home = client.get("/")
-    assert home.status_code == 200
-    assert b"Pocket Cinema" in home.data
-    assert home.data.count(b'class="movie-card"') == 24
-    assert client.get("/movie/afterlight").status_code == 200
-    assert client.get("/movie/missing").status_code == 404
+"""Application smoke checks for the recipe read slice.
+
+Page composition and cookbook operations are delivered by later tickets.
+"""
 
 
-def test_catalog_search_and_detail_api(client):
-    movies = client.get("/api/movies?q=sci-fi").get_json()
-    assert len(movies) >= 3
-    assert client.get("/api/movies/afterlight").get_json()["title"] == "Afterlight Station"
-    assert client.get("/api/movies/missing").status_code == 404
+def test_collection_and_single_recipe_reads(client):
+    response = client.get("/api/recipes")
+    assert response.status_code == 200
+    recipes = response.get_json()
+    assert len(recipes) >= 12
+    first = recipes[0]
+    detail = client.get(f"/api/recipes/{first['id']}")
+    assert detail.status_code == 200
+    assert detail.get_json() == first
+    assert first["title"] == "Apple and Cinnamon Porridge"
+    assert first["ingredients"][0] == "100 g rolled oats"
 
 
-def test_watchlist_round_trip(client):
-    assert client.get("/api/watchlist").get_json() == []
-    assert client.post("/api/watchlist", json={"id": "afterlight"}).status_code == 201
-    assert [m["id"] for m in client.get("/api/watchlist").get_json()] == ["afterlight"]
-    assert client.delete("/api/watchlist/afterlight").get_json() == {"ids": []}
-    assert client.post("/api/watchlist", json={"id": "missing"}).status_code == 400
+def test_recipe_search_and_missing_api(client):
+    recipes = client.get("/api/recipes?q=  CHICKPEAS  ").get_json()
+    assert [recipe["id"] for recipe in recipes] == ["chickpea-lemon-salad"]
+    empty = client.get("/api/recipes?q=no-such-dish-7a2e")
+    assert empty.status_code == 200
+    assert empty.get_json() == []
+    missing = client.get("/api/recipes/missing")
+    assert missing.status_code == 404
+    assert missing.get_json() == {"error": "Recipe not found"}
+
+
+def test_application_instances_own_immutable_recipe_state(client):
+    from app import create_app
+    from recipes import RecipeCollection
+
+    collection = client.application.extensions["recipe_collection"]
+    other = create_app(testing=True)
+    assert isinstance(collection, RecipeCollection)
+    assert collection is not other.extensions["recipe_collection"]
+    assert collection.recipes == other.extensions["recipe_collection"].recipes
+    assert client.application.config["TESTING"] is True
+    assert {rule.rule for rule in client.application.url_map.iter_rules()} == {
+        "/static/<path:filename>", "/api/recipes", "/api/recipes/<recipe_id>",
+    }
