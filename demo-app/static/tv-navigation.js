@@ -1,4 +1,4 @@
-import {nextBrowseFocus, recipeHref} from './app-logic.js';
+import {nextBrowseFocus, nextDetailAction, recipeHref} from './app-logic.js';
 
 export function focusAndReveal(element) {
   if (!element) return;
@@ -7,6 +7,49 @@ export function focusAndReveal(element) {
 }
 
 const ARROWS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']);
+
+// Listen across the document for explicit return, but consume arrows only on
+// the two native actions. Enter and content scrolling remain browser behavior.
+export function installTvDetail({backAction, cookbookAction, browseUrl,
+  navigate = href => globalThis.location.assign(href)}) {
+  const document = backAction?.ownerDocument;
+  if (!document || cookbookAction?.ownerDocument !== document ||
+      !backAction || !cookbookAction || browseUrl !== '/?mode=tv' ||
+      typeof navigate !== 'function') {
+    throw new Error('Invalid TV recipe detail actions');
+  }
+  const actions = [backAction, cookbookAction];
+  let actionIndex = 0;
+  const indexOfTarget = target => actions.findIndex(action => action.contains(target));
+  const onFocus = event => {
+    const index = indexOfTarget(event.target);
+    if (index >= 0) actionIndex = index;
+  };
+  const onKey = event => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey ||
+        event.metaKey || event.shiftKey || isEditable(event.target)) return;
+    const actual = indexOfTarget(event.target);
+    if (actual >= 0) actionIndex = actual;
+    const next = nextDetailAction(actionIndex, event.key);
+    if (next.command === 'return') {
+      event.preventDefault();
+      navigate(browseUrl);
+    } else if (next.command === 'focus' && actual >= 0) {
+      event.preventDefault();
+      actionIndex = next.actionIndex;
+      focusAndReveal(actions[actionIndex]);
+    }
+  };
+  // Focus before attaching listeners so an initialization failure cannot leave
+  // an unowned listener behind. Subsequent focusin tracks Tab and pointer use.
+  focusAndReveal(backAction);
+  document.addEventListener('focusin', onFocus);
+  document.addEventListener('keydown', onKey);
+  return () => {
+    document.removeEventListener('focusin', onFocus);
+    document.removeEventListener('keydown', onKey);
+  };
+}
 
 function isEditable(target) {
   if (target?.isContentEditable || target?.closest?.('input, textarea, select')) return true;

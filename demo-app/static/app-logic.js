@@ -15,6 +15,16 @@ export function recipeHref(recipeId, mode) {
   return `/recipe/${encodeURIComponent(recipeId)}${mode === 'tv' ? '?mode=tv' : ''}`;
 }
 
+export function nextDetailAction(actionIndex = 0, key) {
+  const index = actionIndex === 1 ? 1 : 0;
+  if (key === 'ArrowUp' || key === 'ArrowDown') {
+    return {actionIndex: key === 'ArrowUp' ? 0 : 1, command: 'focus'};
+  }
+  const command = key === 'Enter' ? 'activate'
+    : key === 'Escape' || key === 'Backspace' ? 'return' : 'none';
+  return {actionIndex: index, command};
+}
+
 // Reconcile on every transition: rail membership can change between key events.
 // The preferred column survives shorter rails until horizontal or native focus.
 export function nextBrowseFocus(rails, current, direction) {
