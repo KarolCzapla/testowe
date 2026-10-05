@@ -1,6 +1,6 @@
 import {matchesRecipe} from './app-logic.js';
 import {createCookbookController} from './cookbook.js';
-import {installTvBrowse} from './tv-navigation.js';
+import {installTvBrowse, installTvDetail} from './tv-navigation.js';
 
 const EMPTY_MESSAGE = 'No recipes found. Try another ingredient or dish.';
 
@@ -15,7 +15,7 @@ export function updateBrowseResults({recipes, cards, query, countElement, emptyE
 }
 
 // Both page types share authoritative membership and accessible announcements.
-export function initializePage(document, {transport} = {}) {
+export function initializePage(document, {transport, navigate} = {}) {
   const bootstrapElement = document.querySelector('#page-bootstrap');
   if (!bootstrapElement) return () => {};
   const countElement = document.querySelector('#count');
@@ -48,25 +48,36 @@ export function initializePage(document, {transport} = {}) {
       initialIds: bootstrap.saved_recipe_ids, controls, transport, announce,
     });
     cleanups.push(() => cookbook.dispose());
+    if (bootstrap.mode === 'tv') {
+      if (bootstrap.page === 'browse') {
+        cleanups.push(installTvBrowse({root: document.querySelector('[data-tv-browse]')}));
+      } else {
+        const group = document.querySelector('[data-detail-actions]');
+        cleanups.push(installTvDetail({
+          backAction: group?.querySelector('.back'),
+          cookbookAction: group?.querySelector('.cookbook'),
+          browseUrl: bootstrap.browse_url, navigate,
+        }));
+      }
+    }
+    const search = document.querySelector('#search');
+    if (bootstrap.page === 'browse' && bootstrap.mode === 'mobile' && search) {
+      const cards = [...document.querySelectorAll('.recipe-card')];
+      const emptyElement = document.querySelector('#empty');
+      if (!countElement || !emptyElement) throw new Error('Missing recipe search status');
+      const update = () => updateBrowseResults({
+        recipes: bootstrap.recipes, cards, query: search.value, countElement, emptyElement,
+      });
+      update();
+      search.addEventListener('input', update);
+      cleanups.push(() => search.removeEventListener('input', update));
+    }
   } catch {
     announce('Could not start My Cookbook for these recipes. Please reload.');
     if (countElement) countElement.textContent = 'Could not start recipe search. Please reload.';
     cleanup();
     return cleanup;
   }
-  if (bootstrap.page === 'browse' && bootstrap.mode === 'tv') {
-    cleanups.push(installTvBrowse({root: document.querySelector('[data-tv-browse]')}));
-  }
-  const search = document.querySelector('#search');
-  if (bootstrap.page !== 'browse' || bootstrap.mode !== 'mobile' || !search) return cleanup;
-  const cards = [...document.querySelectorAll('.recipe-card')];
-  const emptyElement = document.querySelector('#empty');
-  const update = () => updateBrowseResults({
-    recipes: bootstrap.recipes, cards, query: search.value, countElement, emptyElement,
-  });
-  search.addEventListener('input', update);
-  update();
-  cleanups.push(() => search.removeEventListener('input', update));
   return cleanup;
 }
 
