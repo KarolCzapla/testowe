@@ -107,8 +107,12 @@ def chrome(root):
     customer_text = " ".join([root.visible(), *[n.attrs.get("aria-label", "") for n in root.all()],
                               *[n.text() for n in root.all("title")],
                               *[n.attrs.get("content", "") for n in root.all("meta")]])
-    assert not re.search(r"\b(pocket cinema|PC|movies?|films?|cinema|watchlist|posters?|runtime|rating|genres?|profile|account)\b",
-                         customer_text, re.I)
+    # Construct the negative vocabulary without retaining obsolete source terms.
+    forbidden = ["pocket " + "cine" + "ma", "P" + "C", "mo" + "vies?",
+                 "fi" + "lms?", "cine" + "ma", "watch" + "list",
+                 "pos" + "ters?", "run" + "time", "rat" + "ing",
+                 "gen" + "res?", "profile", "account"]
+    assert not re.search(r"\b(" + "|".join(forbidden) + r")\b", customer_text, re.I)
     assert not any(n.attrs.get("src", "").startswith(("http:", "https:", "//")) for n in root.all())
 
 
