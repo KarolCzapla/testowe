@@ -1,5 +1,6 @@
 import {matchesRecipe} from './app-logic.js';
 import {createCookbookController} from './cookbook.js';
+import {installTvBrowse} from './tv-navigation.js';
 
 const EMPTY_MESSAGE = 'No recipes found. Try another ingredient or dish.';
 
@@ -52,6 +53,9 @@ export function initializePage(document, {transport} = {}) {
     if (countElement) countElement.textContent = 'Could not start recipe search. Please reload.';
     cleanup();
     return cleanup;
+  }
+  if (bootstrap.page === 'browse' && bootstrap.mode === 'tv') {
+    cleanups.push(installTvBrowse({root: document.querySelector('[data-tv-browse]')}));
   }
   const search = document.querySelector('#search');
   if (bootstrap.page !== 'browse' || bootstrap.mode !== 'mobile' || !search) return cleanup;
